@@ -51,7 +51,7 @@
     },
     {
       "parameters": {
-        "sendTo": "ameypsawant06@gmail.com",
+        "sendTo": "Email Address",
         "subject": "n8n - Daily Weather Report",
         "message": "={{ $json.html }}",
         "options": {}
@@ -67,7 +67,7 @@
       "webhookId": "128b0b49-405d-4b06-8a2c-022c2cbb3406",
       "credentials": {
         "gmailOAuth2": {
-          "id": "GJpw2BXFIO0aNcUz",
+          "id": "Your Gmail OAuth2 ID",
           "name": "Gmail account"
         }
       }
