@@ -1,0 +1,129 @@
+{
+  "name": "Auto-Generate & Email Daily Weather Insights",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "=0 8 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "096f93c6-57ed-4f40-b8fd-7483708589fe",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.open-meteo.com/v1/forecast?latitude=40.7465&longitude=-74.1563&daily=sunrise,sunset,temperature_2m_max,temperature_2m_min,uv_index_max,wind_speed_10m_max,wind_direction_10m_dominant&current=temperature_2m,wind_speed_10m,wind_direction_10m,rain&timezone=America%2FNew_York&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "d576bd92-1fa9-41ff-9de1-84c66ded98b0",
+      "name": "HTTP Request",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const current = items[0].json.current;\nconst daily = items[0].json.daily;\n\nfunction formatTime(iso) {\n  return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });\n}\n\nconst html = `\n<html>\n  <head>\n    <style>\n      body { font-family: 'Arial', sans-serif; background: #e0f7fa; padding: 20px; color: #333; }\n      .card { max-width: 480px; margin: auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; }\n      h2 { text-align: center; color: #00796b; margin: 0 0 10px; }\n      h3 { font-size: 15px; color: #004d40; border-bottom: 1px solid #eee; margin: 16px 0 8px; }\n      p { margin: 4px 0; font-size: 14px; }\n      .label { font-weight: 600; }\n      .footer { text-align: center; font-size: 12px; color: #999; margin-top: 16px; }\n    </style>\n  </head>\n  <body>\n    <div class=\"card\">\n      <h2>🌤️ Harrison, NJ - Daily Forecast</h2>\n      <p><span class=\"label\">📅 Date:</span> ${new Date().toLocaleDateString()}</p>\n      <h3>🌅 Sunrise & Sunset</h3>\n      <p><span class=\"label\">Sunrise:</span> ${formatTime(daily.sunrise[0])} | \n      <span class=\"label\">Sunset:</span> ${formatTime(daily.sunset[0])}</p>\n      <h3>🌡️ Temperature</h3>\n      <p><span class=\"label\">High:</span> ${daily.temperature_2m_max[0]}°F | <span class=\"label\">Low:</span> ${daily.temperature_2m_min[0]}°F</p>\n      <h3>💨 UV & Wind</h3>\n      <p><span class=\"label\">UV Index:</span> ${daily.uv_index_max[0]} | <span class=\"label\">Wind:</span> ${daily.wind_speed_10m_max[0]} mph</p>\n      <h3>📍 Current Conditions</h3>\n      <p><span class=\"label\">Temp:</span> ${current.temperature_2m}°F | <span class=\"label\">Wind:</span> ${current.wind_speed_10m} mph | <span class=\"label\">Rain:</span> ${current.rain} in</p>\n      <div class=\"footer\">© 2025 Amey Sawant. All rights reserved.</div>\n    </div>\n  </body>\n</html>\n`;\n\nreturn [{ json: { html } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "b51e06c8-6d47-46da-9bd7-de128bed54ce",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "sendTo": "ameypsawant06@gmail.com",
+        "subject": "n8n - Daily Weather Report",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        660,
+        0
+      ],
+      "id": "c93e0c94-61bf-484b-bca7-aac463b07f5b",
+      "name": "Gmail",
+      "webhookId": "128b0b49-405d-4b06-8a2c-022c2cbb3406",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GJpw2BXFIO0aNcUz",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "6e189c5a-8167-4058-9f01-baa7d70f4c88",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4827f05b8062334459c8c6a3376320eff60d62dbd28a619d20f5643c81e142fb"
+  },
+  "id": "0xke8IXpj0QCdyBv",
+  "tags": []
+}
